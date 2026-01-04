@@ -4,6 +4,11 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install system dependencies (needed for wordcloud/matplotlib)
+# Install system dependencies (needed for wordcloud/matplotlib)
+# SWITCH TO ALIYUN MIRROR (CRITICAL FOR CHINA DEPLOYMENT)
+RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources
+RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
+
 RUN apt-get update && apt-get install -y \
     build-essential \
     libfreetype6-dev \
