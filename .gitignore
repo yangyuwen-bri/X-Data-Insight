@@ -1,0 +1,19 @@
+
+# System
+.DS_Store
+testdata/
+
+# Backend
+app/backend/.env
+app/backend/venv/
+app/backend/__pycache__/
+app/backend/*.pyc
+app/backend/data/*.csv
+app/backend/static/charts/*.png
+app/backend/static/charts/*.jpg
+
+# Frontend
+app/frontend/node_modules/
+app/frontend/.next/
+app/frontend/out/
+app/frontend/.env.local
