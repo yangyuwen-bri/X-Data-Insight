@@ -19,7 +19,7 @@ app.mount("/api/static", StaticFiles(directory="static"), name="static")
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Next.js default
+    allow_origins=["*"],  # 允许所有人访问
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

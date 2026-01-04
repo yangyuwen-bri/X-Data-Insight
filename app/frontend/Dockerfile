@@ -14,6 +14,10 @@ COPY . .
 # Disable telemetry during build
 ENV NEXT_TELEMETRY_DISABLED 1
 
+# 【关键修改】接收构建参数，并作为环境变量打入包中
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 # Pass API URL during build if needed, or rely on client-side env at runtime if handled correctly (for static generation it might be needed)
 # But for client-side fetches, we can set NEXT_PUBLIC_API_URL via env in docker-compose.
 RUN npm run build
