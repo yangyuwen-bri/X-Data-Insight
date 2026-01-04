@@ -8,7 +8,7 @@ services:
       dockerfile: Dockerfile
     container_name: xdata-backend
     ports:
-      - "8001:8000"
+      - "8000:8000"
     env_file:
       - ./app/backend/.env
     volumes:
@@ -24,6 +24,6 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # IMPORTANT: Replace localhost with your VPS Public IP. Note port 8001.
-      - NEXT_PUBLIC_API_URL=http://YOUR_SERVER_IP:8001/api
+      # Production Public IP Configuration
+      - NEXT_PUBLIC_API_URL=http://139.224.61.205:8000/api
     restart: always
