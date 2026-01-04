@@ -82,9 +82,10 @@ export default function Home() {
   React.useEffect(() => {
     let interval: NodeJS.Timeout
     if (taskId && isPolling) {
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
       interval = setInterval(async () => {
         try {
-          const res = await fetch(`http://localhost:8000/api/scrape/${taskId}`)
+          const res = await fetch(`${API_BASE_URL}/scrape/${taskId}`)
           const data = await res.json()
           setScrapeStatus(data.status)
 
@@ -104,7 +105,8 @@ export default function Home() {
 
   const fetchDataset = async (runId: string) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/scrape/${runId}/dataset`)
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
+      const res = await fetch(`${API_BASE_URL}/scrape/${runId}/dataset`)
       const data = await res.json()
       setDataset(data)
       setDatasetId(runId)
