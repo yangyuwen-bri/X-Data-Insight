@@ -32,6 +32,7 @@ export default function Home() {
   const [isPolling, setIsPolling] = React.useState(false)
   const [isExportOpen, setIsExportOpen] = React.useState(false) // Export Modal State
   const [isAnalysisModalOpen, setIsAnalysisModalOpen] = React.useState(false) // Analysis Modal State
+  const [isLoadingDataset, setIsLoadingDataset] = React.useState(false) // New Loading State
 
   const { setDataset: setGlobalDataset, setEventName, setDatasetId } = useDatasetStore()
 
@@ -104,6 +105,7 @@ export default function Home() {
   }, [taskId, isPolling])
 
   const fetchDataset = async (runId: string) => {
+    setIsLoadingDataset(true)
     try {
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
       const res = await fetch(`${API_BASE_URL}/scrape/${runId}/dataset`)
@@ -112,6 +114,8 @@ export default function Home() {
       setDatasetId(runId)
     } catch (e) {
       console.error("Failed to fetch dataset", e)
+    } finally {
+      setIsLoadingDataset(false)
     }
   }
 
@@ -371,8 +375,32 @@ export default function Home() {
               )}
             </div>
 
-            {dataset && (
-              <div className="mt-8">
+            {/* Loading Skeleton */}
+            {isLoadingDataset && (
+              <div className="mt-8 animate-in fade-in duration-500">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="h-7 w-48 bg-zinc-200 rounded animate-pulse" />
+                  <div className="h-8 w-32 bg-zinc-200 rounded animate-pulse" />
+                </div>
+                <div className="border border-zinc-200 rounded-lg overflow-hidden">
+                  <div className="bg-zinc-50 border-b border-zinc-200 px-4 py-3 flex gap-4">
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                      <div key={i} className="h-4 bg-zinc-200 rounded animate-pulse flex-1" />
+                    ))}
+                  </div>
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="px-4 py-3 border-b border-zinc-100 flex gap-4">
+                      <div className="h-4 w-24 bg-zinc-100 rounded animate-pulse" />
+                      <div className="h-4 w-full bg-zinc-100 rounded animate-pulse" />
+                      <div className="h-4 w-12 bg-zinc-100 rounded animate-pulse" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!isLoadingDataset && dataset && (
+              <div className="mt-8 animate-in fade-in duration-500">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold">Collected Data ({dataset.length} items)</h3>
                   <Button onClick={() => setIsExportOpen(true)} variant="outline" className="h-8">
