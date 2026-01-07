@@ -89,7 +89,7 @@ export function InfluencerChart({ data }: InfluencerChartProps) {
     }, [data]);
 
     return (
-        <div className="w-full h-[420px] bg-white rounded-xl shadow-sm border border-zinc-100 p-4">
+        <div className="w-full h-[520px] bg-white rounded-xl shadow-sm border border-zinc-100 p-4">
             {data && data.length > 0 ? (
                 <ReactECharts option={chartOption} style={{ height: '100%', width: '100%' }} />
             ) : (
