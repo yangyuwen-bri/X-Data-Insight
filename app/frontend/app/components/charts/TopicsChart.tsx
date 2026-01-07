@@ -18,7 +18,7 @@ export function TopicsChart({ data }: TopicsChartProps) {
         if (!data) return [];
         const dates = new Set<string>();
         data.forEach(item => {
-            const d = item.created_at || item.date;
+            const d = item.created_at || item.createdAt || item.date;
             if (d) {
                 // Handle various date formats, assume ISO or standard string
                 try {
@@ -34,7 +34,7 @@ export function TopicsChart({ data }: TopicsChartProps) {
     const filteredData = useMemo(() => {
         if (selectedDate === 'All') return data;
         return data.filter(item => {
-            const d = item.created_at || item.date;
+            const d = item.created_at || item.createdAt || item.date;
             if (!d) return false;
             try {
                 return new Date(d).toISOString().split('T')[0] === selectedDate;
