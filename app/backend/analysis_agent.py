@@ -46,12 +46,20 @@ llm = OpenAI(
 # Key: run_id, Value: SmartDataframe instance
 SESSION_STORE = {}
 
-def get_latest_dataset_path():
+def get_latest_dataset_path(session_id: str = None):
+    # Base paths
     search_paths = [
         os.path.join(os.path.dirname(__file__), "../../data/*.csv"),
         os.path.join(os.path.dirname(__file__), "../../*.csv"), # Root dir
         os.path.join(os.getcwd(), "data/*.csv"),
     ]
+    
+    # Add Session Path
+    if session_id:
+        session_path = os.path.join(os.getcwd(), f"data/{session_id}/*.csv")
+        # Session path takes priority/is checked too
+        search_paths.insert(0, session_path)
+
     files = []
     for p in search_paths:
         files.extend(glob.glob(p))
@@ -103,7 +111,7 @@ def sanitize_dataframe(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, str]]:
     df.columns = new_columns
     return df, mapping
 
-async def analyze_data(query: str, run_id: str = None, dataset_id: str = None):
+async def analyze_data(query: str, run_id: str = None, dataset_id: str = None, session_id: str = None):
     """
     Analyzes the dataset using PandasAI with Session Memory.
     run_id: Conversation/Session ID
@@ -145,13 +153,21 @@ async def analyze_data(query: str, run_id: str = None, dataset_id: str = None):
         
         # Priority 1: Specific Dataset ID
         if dataset_id:
-            specific_path = os.path.join(os.getcwd(), f"data/{dataset_id}.csv")
-            if os.path.exists(specific_path):
-                csv_path = specific_path
+            # Check Session Dir first
+            if session_id:
+                 session_specific_path = os.path.join(os.getcwd(), f"data/{session_id}/{dataset_id}.csv")
+                 if os.path.exists(session_specific_path):
+                     csv_path = session_specific_path
+
+            # Fallback to root (legacy/shared)
+            if not csv_path:
+                specific_path = os.path.join(os.getcwd(), f"data/{dataset_id}.csv")
+                if os.path.exists(specific_path):
+                    csv_path = specific_path
         
         # Priority 2: Latest (Fallback)
         if not csv_path:
-             csv_path = get_latest_dataset_path()
+             csv_path = get_latest_dataset_path(session_id)
              
         if not csv_path or not os.path.exists(csv_path):
             return "No dataset found. Please scrape or upload some data first."

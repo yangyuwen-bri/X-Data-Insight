@@ -61,6 +61,27 @@ X-Data-Insight is a full-stack application designed to streamline the workflow o
     - **Dashboard**: http://localhost:3000
     - **API Docs**: http://localhost:8000/docs
 
+### Alternative: Local Development (Manual Startup)
+
+If you want to develop locally without Docker:
+
+**1. Start Backend (Hot Reload)**
+```bash
+cd app/backend
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**2. Start Frontend**
+```bash
+cd app/frontend
+npm install
+npm run dev
+# Access at http://localhost:3000
+```
+
 ## 📂 Project Structure
 
 ```

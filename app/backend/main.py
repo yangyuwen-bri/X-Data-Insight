@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Header
+from typing import Optional
 from fastapi.staticfiles import StaticFiles
 import shutil
 import os
@@ -56,7 +57,7 @@ async def get_scrape_status_endpoint(run_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/scrape/{run_id}/dataset")
-async def get_scrape_dataset_endpoint(run_id: str):
+async def get_scrape_dataset_endpoint(run_id: str, x_session_id: Optional[str] = Header(None)):
     try:
         items = await fetch_scrape_results(run_id)
         
@@ -86,8 +87,14 @@ async def get_scrape_dataset_endpoint(run_id: str):
             if 'author' in df_csv.columns:
                  df_csv['author_name'] = df_csv['author'].apply(lambda x: x.get('userName') if isinstance(x, dict) else str(x))
             
-            os.makedirs("data", exist_ok=True)
-            csv_path = f"data/{run_id}.csv"
+            # Use Session Directory if available
+            if x_session_id:
+                save_dir = f"data/{x_session_id}"
+            else:
+                save_dir = "data"
+                
+            os.makedirs(save_dir, exist_ok=True)
+            csv_path = f"{save_dir}/{run_id}.csv"
             df_csv.to_csv(csv_path, index=False)
             print(f"Auto-saved cleaned dataset to {csv_path}")
 
@@ -96,10 +103,14 @@ async def get_scrape_dataset_endpoint(run_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(file: UploadFile = File(...), x_session_id: Optional[str] = Header(None)):
     try:
         # Ensure data directory exists
-        os.makedirs("data", exist_ok=True)
+        if x_session_id:
+             save_dir = f"data/{x_session_id}"
+        else:
+             save_dir = "data"
+        os.makedirs(save_dir, exist_ok=True)
         
         # Generate Unified Dataset ID
         import time
@@ -108,7 +119,7 @@ async def upload_file(file: UploadFile = File(...)):
         safe_name = "".join([c for c in file.filename if c.isalnum() or c in ('-', '_')]).rstrip()
         dataset_id = f"upload_{timestamp}_{safe_name}"
         
-        file_path = f"data/{dataset_id}.csv"
+        file_path = f"{save_dir}/{dataset_id}.csv"
         
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
@@ -118,11 +129,11 @@ async def upload_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/analyze", response_model=AnalysisResponse)
-async def analyze_endpoint(request: AnalysisRequest):
+async def analyze_endpoint(request: AnalysisRequest, x_session_id: Optional[str] = Header(None)):
     from analysis_agent import analyze_data
     try:
         # Pass dataset_id to agent
-        answer = await analyze_data(request.query, request.run_id, request.dataset_id)
+        answer = await analyze_data(request.query, request.run_id, request.dataset_id, session_id=x_session_id)
         return AnalysisResponse(answer=str(answer))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

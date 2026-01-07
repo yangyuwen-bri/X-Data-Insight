@@ -3,6 +3,7 @@
 import * as React from "react"
 import { SearchForm } from "@/app/components/SearchForm"
 import { type SearchResponse, type ScrapeRequest, triggerScrape } from "@/app/lib/api"
+import { getSessionId } from "@/app/lib/session"
 import { Button } from "@/app/components/ui/button"
 import { ExportDialog } from "@/app/components/ExportDialog"
 import { DataSourceModal } from "@/app/components/DataSourceModal"
@@ -86,7 +87,9 @@ export default function Home() {
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
       interval = setInterval(async () => {
         try {
-          const res = await fetch(`${API_BASE_URL}/scrape/${taskId}`)
+          const res = await fetch(`${API_BASE_URL}/scrape/${taskId}`, {
+            headers: { "x-session-id": getSessionId() }
+          })
           const data = await res.json()
           setScrapeStatus(data.status)
 
@@ -108,7 +111,9 @@ export default function Home() {
     setIsLoadingDataset(true)
     try {
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
-      const res = await fetch(`${API_BASE_URL}/scrape/${runId}/dataset`)
+      const res = await fetch(`${API_BASE_URL}/scrape/${runId}/dataset`, {
+        headers: { "x-session-id": getSessionId() }
+      })
       const data = await res.json()
       setDataset(data)
       setDatasetId(runId)

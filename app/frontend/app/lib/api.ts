@@ -1,3 +1,5 @@
+import { getSessionId } from "./session";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
 export interface SearchResponse {
@@ -30,6 +32,7 @@ export const searchEvent = async (eventName: string): Promise<SearchResponse> =>
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            "x-session-id": getSessionId(),
         },
         body: JSON.stringify({ event_name: eventName }),
     });
@@ -44,7 +47,10 @@ export const searchEvent = async (eventName: string): Promise<SearchResponse> =>
 export const triggerScrape = async (data: ScrapeRequest): Promise<ScrapeResponse> => {
     const response = await fetch(`${API_BASE_URL}/scrape`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json",
+            "x-session-id": getSessionId(),
+        },
         body: JSON.stringify(data),
     });
 
@@ -62,7 +68,10 @@ export interface AnalysisResponse {
 export const analyzeData = async (query: string, runId?: string, datasetId?: string): Promise<AnalysisResponse> => {
     const response = await fetch(`${API_BASE_URL}/analyze`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json",
+            "x-session-id": getSessionId(),
+        },
         body: JSON.stringify({ query, run_id: runId, dataset_id: datasetId }),
     });
 
@@ -78,6 +87,9 @@ export const uploadDataset = async (file: File): Promise<{ filename: string; sta
 
     const response = await fetch(`${API_BASE_URL}/upload`, {
         method: "POST",
+        headers: {
+            "x-session-id": getSessionId(),
+        },
         body: formData,
     });
 
