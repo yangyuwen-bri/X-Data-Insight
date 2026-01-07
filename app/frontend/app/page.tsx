@@ -111,7 +111,13 @@ export default function Home() {
     setIsLoadingDataset(true)
     try {
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
-      const res = await fetch(`${API_BASE_URL}/scrape/${runId}/dataset`, {
+      let url = `${API_BASE_URL}/scrape/${runId}/dataset`
+      const params = new URLSearchParams()
+      if (startDate) params.append("start_date", startDate)
+      if (endDate) params.append("end_date", endDate)
+      if (params.toString()) url += `?${params.toString()}`
+
+      const res = await fetch(url, {
         headers: { "x-session-id": getSessionId() }
       })
       const data = await res.json()

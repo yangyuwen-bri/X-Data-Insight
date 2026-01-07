@@ -2,7 +2,10 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Header
 from typing import Optional
 from fastapi.staticfiles import StaticFiles
 import shutil
+import shutil
 import os
+from dateutil import parser as date_parser
+from datetime import datetime, timezone, timedelta
 from fastapi.middleware.cors import CORSMiddleware
 from models import SearchRequest, SearchResponse, ScrapeRequest, ScrapeResponse, AnalysisRequest, AnalysisResponse
 from search_agent import search_event
@@ -57,21 +60,51 @@ async def get_scrape_status_endpoint(run_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/scrape/{run_id}/dataset")
-async def get_scrape_dataset_endpoint(run_id: str, x_session_id: Optional[str] = Header(None)):
+async def get_scrape_dataset_endpoint(
+    run_id: str, 
+    start_date: Optional[str] = None, 
+    end_date: Optional[str] = None,
+    x_session_id: Optional[str] = Header(None)
+):
     try:
         items = await fetch_scrape_results(run_id)
         
-        # Deduplication Logic
-        # Filter by unique URL
+        # Deduplication & Date Filtering Logic
         seen_urls = set()
         unique_items = []
+        
+        # Parse filter dates if provided
+        filter_start = None
+        filter_end = None
+        if start_date:
+            filter_start = date_parser.parse(start_date).replace(tzinfo=timezone.utc)
+        if end_date:
+            # End date should be end of the day
+            filter_end = date_parser.parse(end_date).replace(tzinfo=timezone.utc) + timedelta(days=1, microseconds=-1)
+
         for item in items:
+            # 1. Date Check
+            if filter_start or filter_end:
+                created_at_str = item.get("createdAt") or item.get("created_at")
+                if created_at_str:
+                    try:
+                        item_date = date_parser.parse(created_at_str)
+                        if item_date.tzinfo is None:
+                            item_date = item_date.replace(tzinfo=timezone.utc)
+                            
+                        if filter_start and item_date < filter_start:
+                            continue
+                        if filter_end and item_date > filter_end:
+                            continue
+                    except:
+                        pass # If parse fails, keep it or skip? Keeping it is safer for now.
+
+            # 2. Deduplication
             url = item.get("url")
             if url and url not in seen_urls:
                 seen_urls.add(url)
                 unique_items.append(item)
             elif not url:
-                # If no URL, keep it (unlikely for tweets)
                 unique_items.append(item)
         
         # Auto-Save to CSV for Agent Context
